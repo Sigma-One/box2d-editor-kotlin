@@ -23,6 +23,7 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop")
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion")
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
+    implementation("org.orbisgis:poly2tri-core:0.1.2")
 }
 
 tasks.withType<KotlinCompile> {
