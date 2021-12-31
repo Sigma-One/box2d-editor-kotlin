@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.6.10"
     application
 }
 
@@ -10,6 +10,7 @@ version = "1.0-SNAPSHOT"
 
 // Versions
 val gdxVersion = "1.10.0"
+val poly2triVersion = "0.1.2"
 
 repositories {
     mavenCentral()
@@ -23,7 +24,7 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop")
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion")
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
-    implementation("org.orbisgis:poly2tri-core:0.1.2")
+    implementation("org.orbisgis:poly2tri-core:$poly2triVersion")
 }
 
 tasks.withType<KotlinCompile> {

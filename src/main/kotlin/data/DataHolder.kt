@@ -1,5 +1,6 @@
 package data
 
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration
 import data.Mesh
 
 /** DataHolder
@@ -12,5 +13,7 @@ import data.Mesh
  **/
 
 object DataHolder {
+    val config: LwjglApplicationConfiguration = LwjglApplicationConfiguration()
+
     val meshes = arrayListOf<Mesh>()
 }

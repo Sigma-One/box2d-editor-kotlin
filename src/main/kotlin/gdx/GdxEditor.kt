@@ -59,9 +59,12 @@ class GdxEditor: ApplicationAdapter() {
         DataHolder.meshes.add(Mesh())
         DataHolder.meshes[0].addPoint(Point(0.5f, 0.5f))
 
-        // Set camera to viewport size
-        // TODO: Scale properly with window
         camera.setToOrtho(false, 800f, 600f)
+    }
+
+
+    override fun resize(width: Int, height: Int) {
+        camera.setToOrtho(false, width.toFloat(), height.toFloat())
     }
 
 
@@ -69,6 +72,8 @@ class GdxEditor: ApplicationAdapter() {
         // Clear screen with a grey colour
         // TODO: Make this configurable
         ScreenUtils.clear(.9f, .9f, .9f, 1f)
+        shapeRenderer.projectionMatrix = camera.projection
+        shapeRenderer.transformMatrix = camera.view
 
         // Render grid
         if (drawGrid) {
@@ -263,8 +268,6 @@ class GdxEditor: ApplicationAdapter() {
             camera.viewportHeight - point.y * camera.viewportHeight
         )
     }
-
-
     private fun cameraToPointCoordinates(point: Point): Point {
         return Point(
             point.x / camera.viewportWidth,
