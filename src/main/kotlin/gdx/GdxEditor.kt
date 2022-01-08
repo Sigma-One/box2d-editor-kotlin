@@ -4,14 +4,21 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.ScreenUtils
 import data.DataHolder
 import data.Mesh
 import data.Point
+import gdx.gui.GuiHolder
+import gdx.gui.widget.ButtonWidget
 import java.lang.Thread.sleep
 import kotlin.math.abs
+
 
 /** gdx.GdxEditor
  * @author  Sigma-One
@@ -25,13 +32,16 @@ import kotlin.math.abs
 class GdxEditor: ApplicationAdapter() {
     // Sprite batch, used to render reference image
     // TODO: This
-    // val sprites: SpriteBatch
+    private lateinit var sprites: SpriteBatch
     // Shape renderer, used for points and lines representing meshes
     private lateinit var shapeRenderer: ShapeRenderer
+    private lateinit var textRenderer: BitmapFont
     // Camera, should be obvious
     private lateinit var camera: OrthographicCamera
     // Active point, used for moving points
     private var activePoint: Point? = null
+
+    private val gui = GuiHolder(gridSize = 10)
 
     // Configuration variables
 
@@ -53,15 +63,34 @@ class GdxEditor: ApplicationAdapter() {
 
     override fun create() {
         // Initialise things
+        generateFont()
+
+        sprites = SpriteBatch()
         shapeRenderer = ShapeRenderer()
         camera = OrthographicCamera()
 
         DataHolder.meshes.add(Mesh())
         DataHolder.meshes[0].addPoint(Point(0.5f, 0.5f))
 
-        camera.setToOrtho(false, 800f, 600f)
+        gui.addWidgets(
+            ButtonWidget(15f, 2f, 5f, 5f, label = "Export.. (TODO)") { println("Exporting...") },
+            ButtonWidget(15f, 2f, 5f, 8f, label = "Import.. (TODO)") { println("Importing...") }
+        )
+
+        camera.setToOrtho(false, DataHolder.config.width.toFloat(), DataHolder.config.height.toFloat())
     }
 
+
+    private fun generateFont() {
+        val generator = FreeTypeFontGenerator(Gdx.files.internal("src/assets/fonts/font.ttf"))
+        val parameter = FreeTypeFontParameter()
+        //parameter.color = Color.BLACK
+        parameter.size = 16
+        parameter.hinting = FreeTypeFontGenerator.Hinting.Full
+        textRenderer = generator.generateFont(parameter) // font size 12 pixels
+
+        generator.dispose() // don't forget to dispose to avoid memory leaks!
+    }
 
     override fun resize(width: Int, height: Int) {
         camera.setToOrtho(false, width.toFloat(), height.toFloat())
@@ -74,6 +103,8 @@ class GdxEditor: ApplicationAdapter() {
         ScreenUtils.clear(.9f, .9f, .9f, 1f)
         shapeRenderer.projectionMatrix = camera.projection
         shapeRenderer.transformMatrix = camera.view
+        sprites.projectionMatrix = camera.projection
+        sprites.transformMatrix = camera.view
 
         // Render grid
         if (drawGrid) {
@@ -192,6 +223,10 @@ class GdxEditor: ApplicationAdapter() {
                 pointSize
             )
         }
+
+        sprites.begin()
+        gui.render(shapeRenderer, textRenderer, sprites)
+        sprites.end()
         shapeRenderer.end()
 
         // Process inputs
@@ -229,10 +264,12 @@ class GdxEditor: ApplicationAdapter() {
         camera.unproject(screenPos)
         val pointPos = cameraToPointCoordinates(Point(screenPos.x, screenPos.y))
 
+        val didGuiClick = gui.input(screenPos.x, screenPos.y)
+
         // Run this as button 0 (Left) is first pressed
         if (Gdx.input.isButtonJustPressed(0)) {
             // Add a point if not clicked on existing one
-            if (getPointAtPos(screenPos.x, screenPos.y) == null) {
+            if (getPointAtPos(screenPos.x, screenPos.y) == null && !didGuiClick) {
                 DataHolder.meshes[0].addPoint(pointPos)
             }
             // Set clicked point as active for dragging

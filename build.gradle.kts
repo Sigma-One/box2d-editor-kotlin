@@ -24,7 +24,10 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop")
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion")
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
+    implementation("com.badlogicgames.gdx:gdx-freetype:$gdxVersion")
+    implementation("com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop")
     implementation("org.orbisgis:poly2tri-core:$poly2triVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.10")
 }
 
 tasks.withType<KotlinCompile> {

@@ -1,0 +1,3 @@
+Font used is Aileron by Sora Sagano.
+Available licensed CC0 at https://fontlibrary.org/en/font/aileron
+Converted from OTF to TTF for use in LibGDX using FontForge
