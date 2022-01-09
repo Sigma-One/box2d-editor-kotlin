@@ -8,6 +8,7 @@ abstract class AbstractRectangularWidget(
     val x: Float,
     val y: Float,
     val label: String = "",
+    val id: String = "",
     val defaultBg: Color = Color(0f, 0f, 0f, 1f),
     val hoveredBg: Color = Color(1f, 1f, 1f, 1f),
     val defaultFg: Color = hoveredBg,

@@ -16,6 +16,18 @@ class GuiHolder(private val gridSize: Int = 20) {
         for (w in newWidgets) { widgets.add(w) }
     }
 
+    fun removeWidgetById(widgetId: String) {
+        val removeList = arrayListOf<AbstractRectangularWidget>()
+        for (w in widgets) {
+            if (w.id == widgetId) {
+                removeList.add(w)
+            }
+        }
+        for (w in removeList) {
+            widgets.remove(w)
+        }
+    }
+
     fun render(shapeRenderer: ShapeRenderer, textRenderer: BitmapFont, sprites: SpriteBatch) {
 
         val oldColour = shapeRenderer.color
@@ -52,21 +64,25 @@ class GuiHolder(private val gridSize: Int = 20) {
     fun input(cursorX: Float, cursorT: Float): Boolean {
         var clicked = false
 
-        for (w in widgets) {
-            if (w is IClickableWidget) {
-                val xRange = w.x * gridSize..w.x * gridSize + w.width * gridSize
-                val yRange = w.y * gridSize..w.y * gridSize + w.height * gridSize
+        try {
+            for (w in widgets) {
+                if (w is IClickableWidget) {
+                    val xRange = w.x * gridSize..w.x * gridSize + w.width * gridSize
+                    val yRange = w.y * gridSize..w.y * gridSize + w.height * gridSize
 
-                w.isHovered = if (cursorX in xRange && cursorT in yRange) {
-                    if (Gdx.input.isButtonJustPressed(0)) {
-                        w.onClick()
-                        clicked = true
+                    w.isHovered = if (cursorX in xRange && cursorT in yRange) {
+                        if (Gdx.input.isButtonJustPressed(0)) {
+                            w.onClick()
+                            clicked = true
+                        }
+                        true
+                    } else {
+                        false
                     }
-                    true
                 }
-                else { false }
             }
-        }
+        // A bit hacky, but this allows modifying UI at runtime
+        } catch (exception: ConcurrentModificationException) { clicked = true }
 
         return clicked
     }

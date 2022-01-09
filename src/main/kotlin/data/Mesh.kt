@@ -1,5 +1,6 @@
 package data
 
+import data.json.VertexJson
 import org.poly2tri.Poly2Tri
 import org.poly2tri.geometry.polygon.Polygon
 import org.poly2tri.geometry.polygon.PolygonPoint
@@ -15,7 +16,11 @@ data class Point(
     var x: Float,
     var y: Float,
     var parent: Mesh? = null
-)
+) {
+    fun toVertexJson(): VertexJson {
+        return VertexJson(x.toDouble(), y.toDouble())
+    }
+}
 
 class Mesh {
     // Holds all of the mesh points in order

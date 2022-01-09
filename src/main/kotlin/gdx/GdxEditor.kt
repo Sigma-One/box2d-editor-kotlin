@@ -17,10 +17,12 @@ import com.badlogic.gdx.utils.ScreenUtils
 import data.DataHolder
 import data.Mesh
 import data.Point
+import data.exporter.exportShipRigidBody
 import gdx.gui.GuiHolder
 import gdx.gui.widget.ButtonWidget
 import filechooser.FileChooser
 import filechooser.ImageFileFilter
+import filechooser.JsonFileFilter
 import java.io.File
 import java.lang.Thread.sleep
 import kotlin.math.abs
@@ -49,9 +51,14 @@ class GdxEditor: ApplicationAdapter() {
     private var activePoint: Point? = null
     // GUI root object thing
     private val gui = GuiHolder(gridSize = 10)
+
+    private var isExportGuiVisible = false
+
     // Reference image stuff
     private var referenceImage: Sprite? = null
     private val imageChooser = FileChooser(ImageFileFilter)
+
+    private val exportChooser = FileChooser(JsonFileFilter, 1)
 
     // Configuration variables
 
@@ -61,6 +68,7 @@ class GdxEditor: ApplicationAdapter() {
     var inactiveMeshFirstPointColour = Color(1f,  0f,  0f,  1f) // Colour for inactive meshes' last point
     var inactiveMeshLineColour       = Color(1f,  .5f, .5f, 1f) // Colour for inactive meshes' lines
     var invalidMeshLineColour        = Color(1f,  0f,  0f,  1f) // Colour for invalid meshes' lines
+    var triangulationLineColour      = Color(0f,  0f,  0f,  1f) // Colour for mesh triangulation lines
     var gridColour                   = Color(.5f, .5f, .5f, 1f) // Colour for the grid
 
     var pointSize     = 4f // Size of mesh points (radius)
@@ -85,13 +93,27 @@ class GdxEditor: ApplicationAdapter() {
         DataHolder.meshes[0].addPoint(Point(0.5f, 0.5f))
 
         gui.addWidgets(
-            ButtonWidget(15f, 2f, 2f, 2f, label = "Export.. (TODO)") { println("Exporting...") }, // TODO Implement this
+            ButtonWidget(15f, 2f, 2f, 2f, label = "Export JSON..") { toggleExportOptions() },
             ButtonWidget(15f, 2f, 2f, 5f, label = "Import.. (TODO)") { println("Importing...") },  // TODO Implement this too
             ButtonWidget(15f, 2f, 2f, 8f, label = "Load Reference..") { setReferenceImage(imageChooser.show()) },
             ButtonWidget(15f, 2f, 2f, 11f, label = "Clear Reference") { setReferenceImage(null) }
         )
 
         camera.setToOrtho(false, DataHolder.config.width.toFloat(), DataHolder.config.height.toFloat())
+    }
+
+    private fun toggleExportOptions() {
+        if (!isExportGuiVisible) {
+            gui.addWidgets(
+                ButtonWidget(15f, 2f, 20f, 2f, label = "RigidBody", id = "exportRigidBodyButton") { exportShipRigidBody(exportChooser.show()) },
+                ButtonWidget(15f, 2f, 37f, 2f, label = "Ship Base (TODO)", id = "exportShipBaseButton") { println("TODO") }
+            )
+        }
+        else {
+            gui.removeWidgetById("exportRigidBodyButton")
+            gui.removeWidgetById("exportShipBaseButton")
+        }
+        isExportGuiVisible = !isExportGuiVisible
     }
 
     private fun setReferenceImage(imageFile: File?) {
@@ -104,14 +126,13 @@ class GdxEditor: ApplicationAdapter() {
     }
 
     private fun generateFont() {
+        // Set up GDX bitmap font from TTF file
         val generator = FreeTypeFontGenerator(Gdx.files.internal("src/assets/fonts/font.ttf"))
         val parameter = FreeTypeFontParameter()
-        //parameter.color = Color.BLACK
         parameter.size = 16
         parameter.hinting = FreeTypeFontGenerator.Hinting.Full
-        textRenderer = generator.generateFont(parameter) // font size 12 pixels
-
-        generator.dispose() // don't forget to dispose to avoid memory leaks!
+        textRenderer = generator.generateFont(parameter)
+        generator.dispose()
     }
 
     override fun resize(width: Int, height: Int) {
@@ -193,7 +214,7 @@ class GdxEditor: ApplicationAdapter() {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
         for (mesh in DataHolder.meshes) {
             // Draw triangulation lines first
-            shapeRenderer.color = gridColour
+            shapeRenderer.color = triangulationLineColour
             for (triPoints in mesh.triangles) {
                 shapeRenderer.rectLine(
                     pointToCameraCoordinates(triPoints.first).x,
@@ -264,9 +285,11 @@ class GdxEditor: ApplicationAdapter() {
             )
         }
 
-        sprites.begin()
-        gui.render(shapeRenderer, textRenderer, sprites)
-        sprites.end()
+        if (drawGui) {
+            sprites.begin()
+            gui.render(shapeRenderer, textRenderer, sprites)
+            sprites.end()
+        }
         shapeRenderer.end()
 
         // Process inputs
