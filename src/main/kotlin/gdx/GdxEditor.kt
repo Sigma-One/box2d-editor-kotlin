@@ -51,7 +51,7 @@ class GdxEditor: ApplicationAdapter() {
     private val gui = GuiHolder(gridSize = 10)
     // Reference image stuff
     private var referenceImage: Sprite? = null
-    private val imageChooser = FileChooser("/home/sigma1/box2d-editor-kotlin", ImageFileFilter)
+    private val imageChooser = FileChooser(ImageFileFilter)
 
     // Configuration variables
 

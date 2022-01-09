@@ -5,13 +5,11 @@ import javax.swing.JFileChooser
 import javax.swing.filechooser.FileFilter
 
 class FileChooser(
-    defaultDir: String,
     filter: FileFilter
 ) {
     private val dialog: JFileChooser = JFileChooser()
 
     init {
-        dialog.currentDirectory = File(defaultDir)
         dialog.fileFilter = filter
     }
 
