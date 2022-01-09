@@ -2,9 +2,12 @@ package gdx
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
@@ -16,6 +19,9 @@ import data.Mesh
 import data.Point
 import gdx.gui.GuiHolder
 import gdx.gui.widget.ButtonWidget
+import filechooser.FileChooser
+import filechooser.ImageFileFilter
+import java.io.File
 import java.lang.Thread.sleep
 import kotlin.math.abs
 
@@ -35,13 +41,17 @@ class GdxEditor: ApplicationAdapter() {
     private lateinit var sprites: SpriteBatch
     // Shape renderer, used for points and lines representing meshes
     private lateinit var shapeRenderer: ShapeRenderer
+    // Text renderer (Font) for drawing UI and stuff
     private lateinit var textRenderer: BitmapFont
     // Camera, should be obvious
     private lateinit var camera: OrthographicCamera
     // Active point, used for moving points
     private var activePoint: Point? = null
-
+    // GUI root object thing
     private val gui = GuiHolder(gridSize = 10)
+    // Reference image stuff
+    private var referenceImage: Sprite? = null
+    private val imageChooser = FileChooser("/home/sigma1/box2d-editor-kotlin", ImageFileFilter)
 
     // Configuration variables
 
@@ -55,6 +65,8 @@ class GdxEditor: ApplicationAdapter() {
 
     var pointSize     = 4f // Size of mesh points (radius)
     var lineThickness = 3f   // Mesh line thickness
+
+    var drawGui = true // Whether GUI should be visible
 
     var drawGrid      = true // Whether grid should be rendered
     var gridDensity   = 25   // Grid density
@@ -73,13 +85,23 @@ class GdxEditor: ApplicationAdapter() {
         DataHolder.meshes[0].addPoint(Point(0.5f, 0.5f))
 
         gui.addWidgets(
-            ButtonWidget(15f, 2f, 5f, 5f, label = "Export.. (TODO)") { println("Exporting...") },
-            ButtonWidget(15f, 2f, 5f, 8f, label = "Import.. (TODO)") { println("Importing...") }
+            ButtonWidget(15f, 2f, 2f, 2f, label = "Export.. (TODO)") { println("Exporting...") }, // TODO Implement this
+            ButtonWidget(15f, 2f, 2f, 5f, label = "Import.. (TODO)") { println("Importing...") },  // TODO Implement this too
+            ButtonWidget(15f, 2f, 2f, 8f, label = "Load Reference..") { setReferenceImage(imageChooser.show()) },
+            ButtonWidget(15f, 2f, 2f, 11f, label = "Clear Reference") { setReferenceImage(null) }
         )
 
         camera.setToOrtho(false, DataHolder.config.width.toFloat(), DataHolder.config.height.toFloat())
     }
 
+    private fun setReferenceImage(imageFile: File?) {
+        referenceImage = if (imageFile != null) {
+            Sprite(Texture(FileHandle(imageFile)))
+        }
+        else {
+            null
+        }
+    }
 
     private fun generateFont() {
         val generator = FreeTypeFontGenerator(Gdx.files.internal("src/assets/fonts/font.ttf"))
@@ -105,6 +127,24 @@ class GdxEditor: ApplicationAdapter() {
         shapeRenderer.transformMatrix = camera.view
         sprites.projectionMatrix = camera.projection
         sprites.transformMatrix = camera.view
+
+        // Reference on background
+        // TODO: Make this thing's scale adjustable without breaking the exporting stuff
+        if (referenceImage != null) {
+            sprites.begin()
+            referenceImage!!.setAlpha(0.5f)
+            referenceImage!!.setCenter(
+                pointToCameraCoordinates(Point(.5f, .5f)).x,
+                pointToCameraCoordinates(Point(.5f, .5f)).y
+            )
+            // Calculate scaling such that the coordinates align when exporting
+            referenceImage!!.setScale(
+                camera.viewportWidth / referenceImage!!.width,
+                camera.viewportHeight / referenceImage!!.height
+            )
+            referenceImage!!.draw(sprites)
+            sprites.end()
+        }
 
         // Render grid
         if (drawGrid) {
