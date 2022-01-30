@@ -3,6 +3,11 @@ package filechooser
 import java.io.File
 import javax.swing.filechooser.FileFilter
 
+/**
+ * @author Sigma-One
+ *
+ * An object used as a file filter to select image files in a Swing file chooser
+ */
 object ImageFileFilter: FileFilter() {
     override fun accept(file: File?): Boolean {
         if (file != null) {
@@ -13,11 +18,14 @@ object ImageFileFilter: FileFilter() {
         return false
     }
 
-    override fun getDescription(): String {
-        return "Image Files (PNG, JP(E)G, GIF)"
-    }
+    override fun getDescription(): String = "Image Files (PNG, JP(E)G, GIF)"
 }
 
+/**
+ * @author Sigma-One
+ *
+ * An object used as a file filter to select JSON files in a Swing file chooser
+ */
 object JsonFileFilter: FileFilter() {
     override fun accept(file: File?): Boolean {
         if (file != null) {
@@ -26,7 +34,5 @@ object JsonFileFilter: FileFilter() {
         return false
     }
 
-    override fun getDescription(): String {
-        return "JSON Files"
-    }
+    override fun getDescription(): String = "JSON Files"
 }

@@ -1,7 +1,5 @@
 package gdx.gui.widget
 
-import com.badlogic.gdx.graphics.Color
-
 class ButtonWidget(
     width: Float,
     height: Float,
@@ -14,7 +12,7 @@ class ButtonWidget(
     AbstractRectangularWidget(width, height, x, y, label, id),
     IClickableWidget
 {
-    override fun onClick() {
+    override var onClick = {
         callback()
     }
 }

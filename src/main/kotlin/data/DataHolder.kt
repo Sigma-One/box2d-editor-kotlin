@@ -1,11 +1,10 @@
 package data
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration
-import data.Mesh
+import com.badlogic.gdx.graphics.Color
 
-/** DataHolder
+/**
  * @author  Sigma-One
- * @created 15/12/2021 13:30
  *
  * Used to pass editing data between different parts of the program easily
  * Essentially the only purpose is to hold a bunch of variables
@@ -13,7 +12,12 @@ import data.Mesh
  **/
 
 object DataHolder {
-    val config: LwjglApplicationConfiguration = LwjglApplicationConfiguration()
-
+    val lwjglConfig: LwjglApplicationConfiguration = LwjglApplicationConfiguration()
+    val uiConfig = hashMapOf(
+        "defaultBg" to Color(0f, 0f, 0f, 1f),
+        "defaultFg" to Color(1f, 1f, 1f, 1f),
+        "hoveredBg" to Color(1f, 1f, 1f, 1f),
+        "hoveredFg" to Color(0f, 0f, 0f, 1f)
+    )
     val meshes = arrayListOf<Mesh>()
 }

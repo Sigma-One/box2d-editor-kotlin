@@ -1,17 +1,20 @@
 package gdx.gui.widget
 
 import com.badlogic.gdx.graphics.Color
+import data.DataHolder
 
+@Suppress("LongParameterList") // This is a widget base class, lots of parameters can't really be avoided well
 abstract class AbstractRectangularWidget(
     val width: Float,
     val height: Float,
-    val x: Float,
-    val y: Float,
+    var x: Float,
+    var y: Float,
     val label: String = "",
     val id: String = "",
-    val defaultBg: Color = Color(0f, 0f, 0f, 1f),
-    val hoveredBg: Color = Color(1f, 1f, 1f, 1f),
-    val defaultFg: Color = hoveredBg,
-    val hoveredFg: Color = defaultBg,
-    var isHovered: Boolean = false
+    val defaultBg: Color = DataHolder.uiConfig["defaultBg"]!!,
+    val hoveredBg: Color = DataHolder.uiConfig["hoveredBg"]!!,
+    val defaultFg: Color = DataHolder.uiConfig["defaultFg"]!!,
+    val hoveredFg: Color = DataHolder.uiConfig["hoveredFg"]!!,
+    var isHovered: Boolean = false,
+    var isVisible: Boolean = true
 )

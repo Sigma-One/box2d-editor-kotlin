@@ -1,19 +1,22 @@
 package gdx.gui
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import gdx.gui.widget.AbstractRectangularWidget
+import gdx.gui.widget.ExpandingButtonWidget
 import gdx.gui.widget.IClickableWidget
 
 class GuiHolder(private val gridSize: Int = 20) {
-    val widgets = arrayListOf<AbstractRectangularWidget>()
-    var visible = true
+    private val widgets = arrayListOf<AbstractRectangularWidget>()
+    // var visible = true
 
     fun addWidgets(vararg newWidgets: AbstractRectangularWidget) {
-        for (w in newWidgets) { widgets.add(w) }
+        for (w in newWidgets) {
+            widgets.add(w)
+            if (w is ExpandingButtonWidget) { addWidgets(*w.childButtons) }
+        }
     }
 
     fun removeWidgetById(widgetId: String) {
@@ -21,6 +24,9 @@ class GuiHolder(private val gridSize: Int = 20) {
         for (w in widgets) {
             if (w.id == widgetId) {
                 removeList.add(w)
+                if (w is ExpandingButtonWidget) {
+                    w.childButtons.forEach { c -> removeList.add(c) }
+                }
             }
         }
         for (w in removeList) {
@@ -35,6 +41,7 @@ class GuiHolder(private val gridSize: Int = 20) {
 
 
         for (w in widgets) {
+            if (!w.isVisible) { continue } // Skip if widget is invisible
             sprites.end()
             shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
             shapeRenderer.color = if (w.isHovered && w is IClickableWidget) { w.hoveredBg }
@@ -66,6 +73,8 @@ class GuiHolder(private val gridSize: Int = 20) {
 
         try {
             for (w in widgets) {
+                if (!w.isVisible) { continue }
+
                 if (w is IClickableWidget) {
                     val xRange = w.x * gridSize..w.x * gridSize + w.width * gridSize
                     val yRange = w.y * gridSize..w.y * gridSize + w.height * gridSize

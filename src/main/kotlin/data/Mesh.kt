@@ -17,9 +17,7 @@ data class Point(
     var y: Float,
     var parent: Mesh? = null
 ) {
-    fun toVertexJson(): VertexJson {
-        return VertexJson(x.toDouble(), y.toDouble())
-    }
+    fun toVertexJson(): VertexJson = VertexJson(x.toDouble(), y.toDouble())
 }
 
 class Mesh {

@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.ScreenUtils
 import data.DataHolder
 import data.Mesh
@@ -23,19 +24,11 @@ import gdx.gui.widget.ButtonWidget
 import filechooser.FileChooser
 import filechooser.ImageFileFilter
 import filechooser.JsonFileFilter
+import gdx.gui.widget.ExpandingButtonWidget
 import java.io.File
+import java.io.IOException
 import java.lang.Thread.sleep
 import kotlin.math.abs
-
-
-/** gdx.GdxEditor
- * @author  Sigma-One
- * @created 15/12/2021 13:21
- *
- * The main GDX application for displaying the edited mesh
- * Will be embedded in a Swing UI for the rest of the program
- * This mainly handles rendering along with mouse-based editing of points
- **/
 
 class GdxEditor: ApplicationAdapter() {
     // Sprite batch, used to render reference image
@@ -51,8 +44,6 @@ class GdxEditor: ApplicationAdapter() {
     private var activePoint: Point? = null
     // GUI root object thing
     private val gui = GuiHolder(gridSize = 10)
-
-    private var isExportGuiVisible = false
 
     // Reference image stuff
     private var referenceImage: Sprite? = null
@@ -80,51 +71,65 @@ class GdxEditor: ApplicationAdapter() {
     var gridDensity   = 25   // Grid density
     var gridThickness = 1f   // Grid line thickness
 
-
+    /**
+     * @author  Sigma-One
+     *
+     * LibGDX initialisation method
+     **/
     override fun create() {
-        // Initialise things
+        // Generate the pixmap font that LibGDX wants
         generateFont()
 
+        // Create rendering things
         sprites = SpriteBatch()
         shapeRenderer = ShapeRenderer()
         camera = OrthographicCamera()
 
+        // Add initial mesh
         DataHolder.meshes.add(Mesh())
         DataHolder.meshes[0].addPoint(Point(0.5f, 0.5f))
 
+        // Create GUI
         gui.addWidgets(
-            ButtonWidget(15f, 2f, 2f, 2f, label = "Export JSON..") { toggleExportOptions() },
-            ButtonWidget(15f, 2f, 2f, 5f, label = "Import.. (TODO)") { println("Importing...") },  // TODO Implement this too
-            ButtonWidget(15f, 2f, 2f, 8f, label = "Load Reference..") { setReferenceImage(imageChooser.show()) },
-            ButtonWidget(15f, 2f, 2f, 11f, label = "Clear Reference") { setReferenceImage(null) }
+            // An expanding thing for exporting
+            ExpandingButtonWidget(15f, 2f, 2f, 2f, label = "Export JSON..",
+                ButtonWidget(15f, 2f, 0f, 0f, label = "RigidBody", id = "exportRigidBodyButton") { exportShipRigidBody(exportChooser.show()) },
+                ButtonWidget(15f, 2f, 0f, 0f, label = "Ship Base (TODO)", id = "exportShipBaseButton") { println("TODO") }
+            ),
+            // Importing one
+            ButtonWidget(15f, 2f, 2f, 5f, label = "Import.. (TODO)") { println("TODO") },  // TODO Implement this too
+            // Expander thing for reference image
+            ExpandingButtonWidget(15f, 2f, 2f, 8f, label = "Reference..",
+                ButtonWidget(15f, 2f, 2f, 8f, label = "Load..") { setReferenceImage(imageChooser.show()) },
+                ButtonWidget(15f, 2f, 2f, 11f, label = "Clear") { setReferenceImage(null) }
+            ),
         )
-
-        camera.setToOrtho(false, DataHolder.config.width.toFloat(), DataHolder.config.height.toFloat())
+        // Set camera projection
+        camera.setToOrtho(false, DataHolder.lwjglConfig.width.toFloat(), DataHolder.lwjglConfig.height.toFloat())
     }
 
-    private fun toggleExportOptions() {
-        if (!isExportGuiVisible) {
-            gui.addWidgets(
-                ButtonWidget(15f, 2f, 20f, 2f, label = "RigidBody", id = "exportRigidBodyButton") { exportShipRigidBody(exportChooser.show()) },
-                ButtonWidget(15f, 2f, 37f, 2f, label = "Ship Base (TODO)", id = "exportShipBaseButton") { println("TODO") }
-            )
-        }
-        else {
-            gui.removeWidgetById("exportRigidBodyButton")
-            gui.removeWidgetById("exportShipBaseButton")
-        }
-        isExportGuiVisible = !isExportGuiVisible
-    }
-
+    /**
+     * @author  Sigma-One
+     *
+     * Sets a file as the reference background image, or clears it if the file is invalid or null
+     * @param imageFile A File referring to the desired image, or null
+     **/
     private fun setReferenceImage(imageFile: File?) {
         referenceImage = if (imageFile != null) {
-            Sprite(Texture(FileHandle(imageFile)))
+            try { Sprite(Texture(FileHandle(imageFile))) }
+            catch (exception: GdxRuntimeException) {
+                if (exception.cause is IOException) { null } // If caused by IOexception then the image is just invalid
+                else { throw exception } // Else something bad happened, rethrow exception
+            }
         }
-        else {
-            null
-        }
+        else { null }
     }
 
+    /**
+     * @author  Sigma-One
+     *
+     * Generates a font for GDX, used for the TTF font feature
+     **/
     private fun generateFont() {
         // Set up GDX bitmap font from TTF file
         val generator = FreeTypeFontGenerator(Gdx.files.internal("src/assets/fonts/font.ttf"))
@@ -135,11 +140,25 @@ class GdxEditor: ApplicationAdapter() {
         generator.dispose()
     }
 
+
+    /**
+     * @author  Sigma-One
+     *
+     * Handles window resizing
+     * @param width  The new width
+     * @param height The new height
+     **/
     override fun resize(width: Int, height: Int) {
         camera.setToOrtho(false, width.toFloat(), height.toFloat())
     }
 
-
+    /**
+     * @author Sigma-One
+     *
+     * LibGDX rendering method
+     * Also a main loop of some kind
+     */
+    @Suppress("LongMethod") // Rendering, might as well be in one method for now
     override fun render() {
         // Clear screen with a grey colour
         // TODO: Make this configurable
@@ -213,6 +232,9 @@ class GdxEditor: ApplicationAdapter() {
         // Render points of each mesh and lines between them
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
         for (mesh in DataHolder.meshes) {
+            // Skip if mesh has no points
+            if (mesh.points.isEmpty()) { continue }
+
             // Draw triangulation lines first
             shapeRenderer.color = triangulationLineColour
             for (triPoints in mesh.triangles) {
@@ -306,7 +328,11 @@ class GdxEditor: ApplicationAdapter() {
         camera.update()
     }
 
-
+    /**
+     * @author Sigma-One
+     *
+     * Handles LibGDX inputs, called from [render] as that works as the main loop of sorts
+     */
     private fun input() {
         // Utility function to check for point at some position
         // Position given in screen/camera coordinates
@@ -352,22 +378,34 @@ class GdxEditor: ApplicationAdapter() {
         // Run this as button 1 (Right) is first pressed
         // Last in function as things may rely on this point existing
         // Probably better solutions exist but this works well enough
-        if (Gdx.input.isButtonJustPressed(1)) {
-            // Remove clicked point
-            if (getPointAtPos(screenPos.x, screenPos.y) != null) {
+        if (
+            Gdx.input.isButtonJustPressed(1)
+        &&  getPointAtPos(screenPos.x, screenPos.y) != null
+        ) {
                 DataHolder.meshes[0].removePoint(getPointAtPos(screenPos.x, screenPos.y)!!)
-            }
         }
     }
 
 
-    // Utility methods to convert point coordinates to camera ones and back
+    // Utility methods to convert relative coordinates to camera ones and back
+    /**
+     * @author Sigma-One
+     *
+     * Converts a point with relative point coordinates (i.e. x 0.5, y 0.72) to camera space
+     * @param point A point in relative space
+     */
     private fun pointToCameraCoordinates(point: Point): Point {
         return Point(
             point.x * camera.viewportWidth,
             camera.viewportHeight - point.y * camera.viewportHeight
         )
     }
+    /**
+     * @author Sigma-One
+     *
+     * Converts a point in camera space to relative space as used in the final meshes
+     * @param point A point in camera space
+     */
     private fun cameraToPointCoordinates(point: Point): Point {
         return Point(
             point.x / camera.viewportWidth,
